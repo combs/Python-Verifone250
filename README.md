@@ -47,7 +47,7 @@ Many of the cheapest USB to TTL serial adapters require a driver on Mac OS X. CP
 
 ## About the printer
 
-It uses ink ribbons and boring, non-thermal paper in 3" rolls.
+It uses ink ribbons and boring, non-thermal paper in 3" rolls. There are both black and black/red ribbons available, so be sure to avoid the black-only ribbons if you want to print in red too. 
 
 There are four DIP switches hidden under the right side of the ink ribbon. They control its serial connectivity settings. See [reference guide](https://github.com/combs/Python-Verifone250/files/907688/Verifone.250.pdf).
 
@@ -56,6 +56,8 @@ There is a silly "paper level" sensor that just uses IR light reflectivity. If y
 The AC adapter is huge and funky, don't buy a printer without it. It feeds the printer 22V AC @ 1.5A (yes really)
 
 I haven't had much luck finding TTL serial signals on the printer's board, but surely it's possible, right? Let me know if you do!!
+
+You can pop the cover off with a big flathead screwdriver. Remove 4 Phillips head screws from underside. (there are none under the label.) There are four tabs on each corner of the printer. Use your screwdriver to gently pop the tabs. Start with the back. Sneak a peek towards the front of the printer with a flashlight to find the front tabs. 
 
 
 ## More usage info
