@@ -109,7 +109,7 @@ class Verifone250(object):
 
         self.enterNativeMode()
         self.remoteWrite(ESCAPE,'b',str(int(lines % 10)),';')
-        time.sleep(0.5 * int(lines % 10))
+        time.sleep(0.4 * int(lines % 10))
 
     def enterDoubleWideMode(self):
         # Double wide mode can be mixed and matched in a single line.
@@ -274,7 +274,7 @@ class Verifone250(object):
             else:
                 self.setBlack()
 
-        self.ser.write(stuff)
+        self.remoteWrite(*stuff)
 
     def printLine(self,stuff,**kwargs):
         # Recommended way to tee stuff up unless you need to mix and match
@@ -282,6 +282,7 @@ class Verifone250(object):
         # v.printLine("text",color="red",doubleWide=False,doubleTall=True,autoReset=True)
 
         self.printChars(stuff,**kwargs)
+
         self.flushBuffer()
 
     def remoteWrite(self,*values):
@@ -302,7 +303,9 @@ class Verifone250(object):
                 # The printer resets to black every line :P
 
                 self.isRed = False
-                self.timePending += 1.0
+                self.timePending += 0.2
+                if self.doubleTall:
+                    self.timePending *= 2
 
                 if self.DEBUG_Remote:
                     print("Pausing for",self.timePending,"seconds")
@@ -312,11 +315,11 @@ class Verifone250(object):
                 self.timePending = 0.0
 
             else:
-                # Let's guess 0.05 seconds per character
-                self.timePending += 0.05
+                # Let's guess 0.03 seconds per character
+                self.timePending += 0.03
 
                 if self.doubleWide:
-                    self.timePending += 0.05
+                    self.timePending += 0.03
                     # do it double
 
 
