@@ -296,6 +296,7 @@ class Verifone250(object):
 
         for theByte in theBytes:
             self.ser.write([theByte])
+            time.sleep( 1 / self.speed * 2 )
             if theByte is 10:
 
                 # Newline, triggers printer to print its buffer.
