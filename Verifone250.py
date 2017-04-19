@@ -297,6 +297,21 @@ class Verifone250(object):
         for theByte in theBytes:
             self.ser.write([theByte])
             time.sleep( 1 / self.speed * 2 )
+
+            if self.DEBUG_Remote:
+                print("waiting for flush", end="")
+
+            # realistically a usb serial has its own weird magical buffer, so
+            # the kernel's idea of whether this serial buffer is empty is a bit
+            # hooey. But hey, let's honor it if possible
+
+            while (self.ser.out_waiting):
+                time.sleep(0.0001)
+                if self.DEBUG_Remote:
+                    print('.', end="")
+            if self.DEBUG_Remote:
+                print(" ")
+
             if theByte is 10:
 
                 # Newline, triggers printer to print its buffer.
@@ -324,19 +339,6 @@ class Verifone250(object):
                     # do it double
 
 
-        if self.DEBUG_Remote:
-            print("waiting for flush", end="")
-
-        # realistically a usb serial has its own weird magical buffer, so
-        # the kernel's idea of whether this serial buffer is empty is a bit
-        # hooey. But hey, let's honor it if possible
-
-        while (self.ser.out_waiting):
-            time.sleep(0.0001)
-            if self.DEBUG_Remote:
-                print('.', end="")
-        if self.DEBUG_Remote:
-            print(" ")
 
     def retrievePrinterInformation(self):
 
