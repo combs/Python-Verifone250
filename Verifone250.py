@@ -287,12 +287,12 @@ class Verifone250(object):
         if self.DEBUG_Remote:
             print("-> " + self.__formatRemoteValues(values))
 
-        converted = bytearray()
+        theBytes = bytearray()
         for val in values:
             if type(val)==str:
-                converted += val.encode('ascii')
+                theBytes += val.encode('ascii')
             else:
-                converted += val
+                theBytes += val
 
         for theByte in theBytes:
             self.ser.write([theByte])
