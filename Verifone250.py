@@ -290,7 +290,11 @@ class Verifone250(object):
         theBytes = bytearray()
         for val in values:
             if type(val)==str:
-                theBytes += val.encode('ascii')
+                try:
+                    theBytes += val.encode('ascii')
+                except UnicodeEncodeError:
+                    theBytes += val.encode('utf-8')
+                    
             else:
                 theBytes += val
 
