@@ -247,32 +247,27 @@ class Verifone250(object):
         # Queue up some characters in the buffer.
         # v.printChars("text",color="red",doubleWide=False,doubleTall=True,autoReset=True)
 
-        autoReset = self.autoReset
-        if "autoReset" in kwargs:
-            autoReset = kwargs["autoReset"]
-
+        autoReset = kwargs.get("autoReset", self.autoReset)
+        
         if autoReset:
             self.exitDoubleTallMode()
             self.exitDoubleWideMode()
             self.setBlack()
 
-        if "doubleTall" in kwargs:
-            if kwargs["doubleTall"] is True:
-                self.enterDoubleTallMode()
-            else:
-                self.exitDoubleTallMode()
+        if kwargs.get("doubleTall", False):
+            self.enterDoubleTallMode()
+        else:
+            self.exitDoubleTallMode()
 
-        if "doubleWide" in kwargs:
-            if kwargs["doubleWide"] is True:
-                self.enterDoubleWideMode()
-            else:
-                self.exitDoubleWideMode()
+        if kwargs.get("doubleWide", False):
+            self.enterDoubleWideMode()
+        else:
+            self.exitDoubleWideMode()
 
-        if "color" in kwargs:
-            if kwargs["color"] is "red":
-                self.setRed()
-            else:
-                self.setBlack()
+        if kwargs.get("color", "black") == "red":
+            self.setRed()
+        else:
+            self.setBlack()
 
         self.remoteWrite(*stuff)
 
@@ -292,7 +287,12 @@ class Verifone250(object):
         if self.DEBUG_Remote:
             print("-> " + self.__formatRemoteValues(values))
 
-        theBytes = bytearray(values)
+        converted = bytearray()
+        for val in values:
+            if type(val)==str:
+                converted += converted.encode('ascii')
+            else:
+                converted += val
 
         for theByte in theBytes:
             self.ser.write([theByte])
@@ -312,7 +312,7 @@ class Verifone250(object):
             if self.DEBUG_Remote:
                 print(" ")
 
-            if theByte is 10:
+            if theByte==10:
 
                 # Newline, triggers printer to print its buffer.
 
@@ -347,7 +347,7 @@ class Verifone250(object):
         # Let me know if you get this to work.
         # https://github.com/combs/Python-Verifone250/issues/1
 
-        self.remoteWrite(ESCAPE,chr(0x72),'0')
+        self.remoteWrite(ESCAPE, chr(0x72), '0')
 
         # TODO: retrieve the bytes. How are they delimited?
 
