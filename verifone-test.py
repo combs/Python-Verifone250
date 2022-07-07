@@ -4,7 +4,7 @@ from time import sleep
 
 from Verifone250 import Verifone250
 
-v = Verifone250(port="/dev/cu.wchusbserial110")
+v = Verifone250(port="/dev/ttyUSB0", DEBUG_Remote=True)
 
 
 

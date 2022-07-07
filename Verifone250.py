@@ -1,7 +1,7 @@
 from __future__ import print_function
 import serial,time
 
-ESCAPE=chr(27)
+ESCAPE=27
 red="red"
 black="black"
 
@@ -104,26 +104,33 @@ class Verifone250(object):
 
         self.ser.write(stuff)
 
-    def eject(self,lines=1):
+    def eject(self, lines=1):
         # Yack out some paper! Max 10 lines
 
         self.enterNativeMode()
-        self.remoteWrite(ESCAPE,'b',str(int(lines % 10)),';')
+        self.remoteWrite(bytearray([ESCAPE, ord('b'), 48 + (lines % 10), ord(';')]))
         time.sleep(0.4 * int(lines % 10))
 
     def enterDoubleWideMode(self):
         # Double wide mode can be mixed and matched in a single line.
 
         if self.doubleWide:
+            self.debug("ENTER DOUBLEWIDE already in")
             return
+
+        self.debug("ENTER DOUBLEWIDE")
         self.enterNativeMode()
         self.doubleWide = True
-        self.remoteWrite(chr(30))
+
+        self.remoteWrite(bytearray([30]))
 
     def exitDoubleWideMode(self):
         if self.doubleWide:
+            self.debug("EXIT DOUBLEWIDE")
             self.doubleWide = False
-            self.remoteWrite(chr(31))
+            self.remoteWrite(bytearray([31]))
+        else:
+            self.debug("EXIT DOUBLEWIDE already out")
 
     def enterDoubleTallMode(self):
         # Double tall mode is line at a time.
@@ -131,40 +138,49 @@ class Verifone250(object):
         # what's set at newline time
 
         if self.doubleTall:
+            self.debug("ENTER DOUBLETALL already in")
             return
+        self.debug("ENTER DOUBLETALL")
         self.enterNativeMode()
         self.doubleTall = True
-        self.remoteWrite(ESCAPE,'f',chr(49),chr(49),';')
+        self.remoteWrite(bytearray([ESCAPE,ord('f'),49,49,ord(';')]))
 
     def exitDoubleTallMode(self):
-        if self.doubleTall:
+        if self.doubleTall:        
+            self.debug("EXIT DOUBLETALL")
             self.doubleTall = False
-            self.remoteWrite(ESCAPE,'f',chr(48),chr(48),';')
+            self.remoteWrite(bytearray([ESCAPE,ord('f'),48,48,ord(';')]))
+        else:
+            self.debug("EXIT DOUBLETALL already out")
 
     def enterNativeMode(self):
         # Entering native mode flushes the buffer, so we try to avoid it:
         if self.nativeMode:
             return
 
-        self.remoteWrite(chr(0x1C))
+        self.debug("ENTER NATIVE")
+        self.remoteWrite(bytearray([0x1C]))
         self.nativeMode = True
         self.__clearFormatting()
 
     def __clearFormatting(self):
 
         # Internal helper. Doesn't write anything to printer
-
+        self.debug("CLEAR FORMATTING")
         self.doubleTall = False
         self.doubleWide = False
         self.isRed = False
 
+    def debug(self, stuff):
+        if self.DEBUG_Remote:
+            print(stuff)
     def exitNativeMode(self):
-
         # This is the same as "Enter Printer 200 Emulation Mode"
 
         # Exiting native mode flushes the buffer, so we try to avoid it:
         if self.nativeMode:
-            self.remoteWrite(chr(0x1D))
+            self.debug("EXIT NATIVE")
+            self.remoteWrite(bytearray([0x1D]))
             self.nativeMode = False
 
         return
@@ -205,7 +221,7 @@ class Verifone250(object):
         # Let me know if you get this to work.
         # https://github.com/combs/Python-Verifone250/issues/1
 
-        self.remoteWrite(ESCAPE,chr(0x64))
+        self.remoteWrite(bytearray([ESCAPE,0x64]))
 
         rawVal = self.getBytes(1)
 
@@ -231,7 +247,7 @@ class Verifone250(object):
         # Let me know if you get this to work.
         # https://github.com/combs/Python-Verifone250/issues/1
 
-        self.remoteWrite(ESCAPE,'i')
+        self.remoteWrite(bytearray([ESCAPE, ord('i')]))
         rawVal = self.getBytes(1)
 
         if len(rawVal) > 0:
@@ -249,25 +265,26 @@ class Verifone250(object):
 
         autoReset = kwargs.get("autoReset", self.autoReset)
         
-        if autoReset:
+        self.debug(kwargs)
+        if autoReset==True:
             self.exitDoubleTallMode()
             self.exitDoubleWideMode()
             self.setBlack()
 
-        if kwargs.get("doubleTall", False):
+        if kwargs.get("doubleTall", False)==True:
             self.enterDoubleTallMode()
-        else:
-            self.exitDoubleTallMode()
+        # else:
+        #     self.exitDoubleTallMode()
 
-        if kwargs.get("doubleWide", False):
+        if kwargs.get("doubleWide", False)==True:
             self.enterDoubleWideMode()
-        else:
-            self.exitDoubleWideMode()
+        # else:
+        #     self.exitDoubleWideMode()
 
         if kwargs.get("color", "black") == "red":
             self.setRed()
-        else:
-            self.setBlack()
+        # else:
+        #     self.setBlack()
 
         self.remoteWrite(*stuff)
 
@@ -284,8 +301,6 @@ class Verifone250(object):
         # Dump some raw stuff to the printer.
         # v.remoteWrite('c',chr(50),chr(0x38), etc)
 
-        if self.DEBUG_Remote:
-            print("-> " + self.__formatRemoteValues(values))
 
         theBytes = bytearray()
         for val in values:
@@ -294,16 +309,19 @@ class Verifone250(object):
                     theBytes += val.encode('ascii')
                 except UnicodeEncodeError:
                     theBytes += val.encode('utf-8')
-                    
+
             else:
                 theBytes += val
+
+        if self.DEBUG_Remote:
+            print("-> " + self.__formatRemoteValues(theBytes))
 
         for theByte in theBytes:
             self.ser.write([theByte])
             time.sleep( 1 / self.speed * 2 )
 
-            if self.DEBUG_Remote:
-                print("waiting for flush", end="")
+            # if self.DEBUG_Remote:
+            #     print("waiting for flush", end="")
 
             # realistically a usb serial has its own weird magical buffer, so
             # the kernel's idea of whether this serial buffer is empty is a bit
@@ -351,7 +369,7 @@ class Verifone250(object):
         # Let me know if you get this to work.
         # https://github.com/combs/Python-Verifone250/issues/1
 
-        self.remoteWrite(ESCAPE, chr(0x72), '0')
+        self.remoteWrite(bytearray([ESCAPE, 0x72, ord('0')]))
 
         # TODO: retrieve the bytes. How are they delimited?
 
@@ -359,7 +377,7 @@ class Verifone250(object):
 
         self.nativeMode = False
         self.enterNativeMode()
-        self.remoteWrite(ESCAPE,'c')
+        self.remoteWrite(bytearray([ESCAPE,ord('c')]))
         self.nativeMode = False
         self.__clearFormatting()
 
