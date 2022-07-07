@@ -290,7 +290,7 @@ class Verifone250(object):
         converted = bytearray()
         for val in values:
             if type(val)==str:
-                converted += converted.encode('ascii')
+                converted += val.encode('ascii')
             else:
                 converted += val
 
